@@ -1,0 +1,58 @@
+1000-   A9 0B       LDA   #$0B
+1002-   8D AA C0    STA   $C0AA
+1005-   A9 1F       LDA   #$1F
+1007-   8D AB C0    STA   $C0AB
+100A-   A9 8D       LDA   #$8D
+100C-   20 00 11    JSR   $1100
+100F-   A9 C8       LDA   #$C8
+1011-   20 00 11    JSR   $1100
+1014-   A9 C5       LDA   #$C5
+1016-   20 00 11    JSR   $1100
+1019-   A9 CC       LDA   #$CC
+101B-   20 00 11    JSR   $1100
+101E-   20 00 11    JSR   $1100
+1021-   A9 CF       LDA   #$CF
+1023-   20 00 11    JSR   $1100
+1026-   A9 AC       LDA   #$AC
+1028-   20 00 11    JSR   $1100
+102B-   A9 A0       LDA   #$A0
+102D-   20 00 11    JSR   $1100
+1030-   A9 D7       LDA   #$D7
+1032-   20 00 11    JSR   $1100
+1035-   A9 CF       LDA   #$CF
+1037-   20 00 11    JSR   $1100
+103A-   A9 D2       LDA   #$D2
+103C-   20 00 11    JSR   $1100
+103F-   A9 CC       LDA   #$CC
+1041-   20 00 11    JSR   $1100
+1044-   A9 C4       LDA   #$C4
+1046-   20 00 11    JSR   $1100
+1049-   A9 8D       LDA   #$8D
+104B-   20 00 11    JSR   $1100
+104E-   20 00 12    JSR   $1200
+1051-   09 80       ORA   #$80
+1053-   20 ED FD    JSR   $FDED
+1056-   4C 4E 10    JMP   $104E
+
+1100-   48          PHA   
+1101-   AD 89 C0    LDA   $C089
+1104-   29 70       AND   #$70
+1106-   C9 10       CMP   #$10
+1108-   D0 F7       BNE   $1101
+110A-   68          PLA   
+110B-   8D A8 C0    STA   $C0A8
+110E-   60          RTS
+
+1200-   AD A9 C0    LDA   $C0A9
+1203-   EA          NOP   
+1204-   EA          NOP   
+1205-   EA          NOP   
+1206-   EA          NOP   
+1207-   EA          NOP   
+1208-   EA          NOP   
+1209-   EA          NOP   
+120A-   EA          NOP   
+120B-   29 08       AND   #$08
+120D-   F0 F1       BEQ   $1200
+120F-   AD A8 C0    LDA   $C0A8
+1212-   60          RTS   
