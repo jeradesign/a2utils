@@ -17,34 +17,165 @@ fm_rename       = $09
 fm_position     = $0a
 fm_init         = $0b
 fm_verify       = $0c
+cout            = $fded
 
 main:         
     jsr getfmparmlist
     sty parmlist
     sta parmlist+1
 
-    lda #fm_catalog
+    lda #fm_open
     ldy #$00
     sta (parmlist),y
 
-    lda #1
+    lda #$00    ; record length, 0 for regular file
+    ldy #$02
+    sta (parmlist),y
+    iny
+    sta (parmlist),y
+
+    lda #0      ; volume, 0 = any
+    ldy #$04
+    sta (parmlist),y
+    lda #1      ; drive
     ldy #$05
     sta (parmlist),y
-    lda #$06
+    lda #6      ; slot
     ldy #$06
     sta (parmlist),y
 
-    lda #<fmbuffer
+    lda #$00    ; file type, $00 = text
+    ldy #$07
+    sta (parmlist),y
+
+    lda #<filename  ; "CAT.TXT"
+    ldy #$08
+    sta (parmlist),y
+    lda #>filename
+    iny
+    sta (parmlist),y
+
+    lda #<fmbuffer  ; file anager buffer
     ldy #$0c
     sta (parmlist),y
     lda #>fmbuffer
     iny
     sta (parmlist),y
 
+    lda #<tslbuffer ; track sector list buffer
+    ldy #$0e
+    sta (parmlist),y
+    lda #>tslbuffer
+    iny
+    sta (parmlist),y
+
+    lda #<databuffer    ; data buffer
+    ldy #$10
+    sta (parmlist),y
+    lda #>databuffer
+    iny
+    sta (parmlist),y
+
+    ldx #$ff    ; don't create if not found
     jsr filemanager
+
+    ldy #$0a    ; return code
+    lda (parmlist),y
+    beq open_success
+    brk
+    nop
+
+open_success:
+    lda #fm_position
+    ldy #$00
+    sta (parmlist),y
     
+    lda #$00    ; record number
+    ldy #$02
+    sta (parmlist),y
+    iny
+    sta (parmlist),y
+    iny
+    sta (parmlist),y
+    iny
+    sta (parmlist),y
+
+    ldx #$ff
+    jsr filemanager
+
+    ldy #$0a    ; return code
+    lda (parmlist),y
+    beq position_success
+    brk
+    nop
+
+position_success:
+    lda #fm_read
+    ldy #$00
+    sta (parmlist),y
+    lda #$02    ; range of bytes
+    ldy #$01
+    sta (parmlist),y
+
+    lda #<256   ; read length
+    ldy #$06
+    sta (parmlist),y
+    lda #>256
+    iny
+    sta (parmlist),y
+
+    lda #<readbuffer    ; buffer
+    ldy #$08
+    sta (parmlist),y
+    lda #>readbuffer
+    iny
+    sta (parmlist),y
+
+    ldx #$ff
+    jsr filemanager
+
+    ldy #$0a    ; return code
+    lda (parmlist),y
+    beq read_success
+    brk
+    nop
+
+read_success:
+    ldx #0
+print_loop:
+    lda readbuffer,x
+    beq exit_print
+    jsr cout
+    inx
+    bne print_loop
+exit_print:
+
+    lda #fm_close
+    ldy #$00
+    sta (parmlist),y
+
+    ldx #$ff
+    jsr filemanager
+
+    ldy #$0a    ; return code
+    lda (parmlist),y
+    beq close_success
+    brk
+    nop
+
+close_success:
     jmp warmstart
+
+filename:
+    .byte $c3,$c1,$d4,$ae,$d4,$d8,$d4,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$a0,$00
 
 .bss
 fmbuffer:
     .res 45
+tslbuffer:
+    .res 256
+databuffer:
+    .res 256
+readbuffer:
+    .res 256
+
