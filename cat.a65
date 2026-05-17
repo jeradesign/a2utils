@@ -1,0 +1,32 @@
+;;; Simple "cat" program to learn DOS File Manager API
+;;; John Brewere 5/16/26
+
+loop:
+	  lda   #$8d
+	  jsr   $fded
+	  lda   #$c8
+	  jsr   $fded
+	  lda   #$c5
+	  jsr   $fded
+	  lda   #$cc
+	  jsr   $fded
+	  jsr   $fded
+	  lda   #$cf
+	  jsr   $fded
+	  lda   #$ac
+	  jsr   $fded
+	  lda   #$a0
+	  jsr   $fded
+	  lda   #$d7
+	  jsr   $fded
+	  lda   #$cf
+	  jsr   $fded
+	  lda   #$d2
+	  jsr   $fded
+	  lda   #$cc
+	  jsr   $fded
+	  lda   #$c4
+	  jsr   $fded
+	  lda   #$a1
+	  jsr   $fded
+	  jmp   $3d0
