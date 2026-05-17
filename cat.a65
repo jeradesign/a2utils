@@ -1,32 +1,50 @@
-;;; Simple "cat" program to learn DOS File Manager API
-;;; John Brewere 5/16/26
+; Simple "cat" program to learn DOS File Manager API
+; John Brewer 5/16/26
 
-loop:
-	  lda   #$8d
-	  jsr   $fded
-	  lda   #$c8
-	  jsr   $fded
-	  lda   #$c5
-	  jsr   $fded
-	  lda   #$cc
-	  jsr   $fded
-	  jsr   $fded
-	  lda   #$cf
-	  jsr   $fded
-	  lda   #$ac
-	  jsr   $fded
-	  lda   #$a0
-	  jsr   $fded
-	  lda   #$d7
-	  jsr   $fded
-	  lda   #$cf
-	  jsr   $fded
-	  lda   #$d2
-	  jsr   $fded
-	  lda   #$cc
-	  jsr   $fded
-	  lda   #$c4
-	  jsr   $fded
-	  lda   #$a1
-	  jsr   $fded
-	  jmp   $3d0
+getfmparmlist   = $03dc
+filemanager     = $03d6
+parmlist        = $eb
+warmstart       = $03d0
+fm_open         = $01
+fm_close        = $02
+fm_read         = $03
+fm_write        = $04
+fm_delete       = $05
+fm_catalog      = $06
+fm_lock         = $07
+fm_unlock       = $08
+fm_rename       = $09
+fm_position     = $0a
+fm_init         = $0b
+fm_verify       = $0c
+
+main:         
+    jsr getfmparmlist
+    sty parmlist
+    sta parmlist+1
+
+    lda #fm_catalog
+    ldy #$00
+    sta (parmlist),y
+
+    lda #1
+    ldy #$05
+    sta (parmlist),y
+    lda #$06
+    ldy #$06
+    sta (parmlist),y
+
+    lda #<fmbuffer
+    ldy #$0c
+    sta (parmlist),y
+    lda #>fmbuffer
+    iny
+    sta (parmlist),y
+
+    jsr filemanager
+    
+    jmp warmstart
+
+.bss
+fmbuffer:
+    .res 45
