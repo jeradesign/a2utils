@@ -22,7 +22,7 @@ crout           = $fd8e
 
 main:
     jsr crout
-    
+
     jsr getfmparmlist
     sty parmlist
     sta parmlist+1
@@ -58,7 +58,7 @@ main:
     iny
     sta (parmlist),y
 
-    lda #<fmbuffer  ; file anager buffer
+    lda #<fmbuffer  ; file manager buffer
     ldy #$0c
     sta (parmlist),y
     lda #>fmbuffer
@@ -92,7 +92,7 @@ open_success:
     lda #fm_position
     ldy #$00
     sta (parmlist),y
-    
+
     lda #$00    ; record number
     ldy #$02
     sta (parmlist),y
@@ -116,24 +116,11 @@ position_success:
     lda #fm_read
     ldy #$00
     sta (parmlist),y
-    lda #$02    ; range of bytes
+    lda #$01
     ldy #$01
     sta (parmlist),y
 
-    lda #<256   ; read length
-    ldy #$06
-    sta (parmlist),y
-    lda #>256
-    iny
-    sta (parmlist),y
-
-    lda #<readbuffer    ; buffer
-    ldy #$08
-    sta (parmlist),y
-    lda #>readbuffer
-    iny
-    sta (parmlist),y
-
+read_next:
     ldx #$ff
     jsr filemanager
 
@@ -144,14 +131,13 @@ position_success:
     nop
 
 read_success:
-    ldx #0
-print_loop:
-    lda readbuffer,x
-    beq exit_print
+    ldy #$08
+    lda (parmlist),y
+    beq close_file
     jsr cout
-    inx
-    bne print_loop
-exit_print:
+    jmp read_next
+
+close_file:
 
     lda #fm_close
     ldy #$00
@@ -181,4 +167,3 @@ databuffer:
     .res 256
 readbuffer:
     .res 256
-
