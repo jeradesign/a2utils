@@ -18,8 +18,11 @@ fm_position     = $0a
 fm_init         = $0b
 fm_verify       = $0c
 cout            = $fded
+crout           = $fd8e
 
-main:         
+main:
+    jsr crout
+    
     jsr getfmparmlist
     sty parmlist
     sta parmlist+1
