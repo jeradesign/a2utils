@@ -1,106 +1,103 @@
-*1000L
+    .proc main
 
-1000-   EA          NOP   
-1001-   EA          NOP   
-1002-   EA          NOP   
-1003-   A9 0B       LDA   #$0B
-1005-   8D AA C0    STA   $C0AA
-1008-   A9 1F       LDA   #$1F
-100A-   8D AB C0    STA   $C0AB
-100D-   A9 15       LDA   #$15
-100F-   20 00 11    JSR   $1100
-1012-   20 00 12    JSR   $1200
-1015-   C9 01       CMP   #$01
-1017-   F0 01       BEQ   $101A
-1019-   00          BRK   
-101A-   20 00 12    JSR   $1200
-101D-   C9 01       CMP   #$01
-101F-   F0 01       BEQ   $1022
-1021-   00          BRK   
-1022-   20 00 12    JSR   $1200
-1025-   C9 FE       CMP   #$FE
-1027-   F0 01       BEQ   $102A
-1029-   00          BRK   
-102A-   A2 00       LDX   #$00
-102C-   20 00 12    JSR   $1200
-102F-   9D 00 09    STA   $0900,X
-1032-   E8          INX   
-1033-   10 F7       BPL   $102C
-1035-   20 00 12    JSR   $1200
-1038-   A9 06       LDA   #$06
-103A-   20 00 11    JSR   $1100
-103D-   20 00 12    JSR   $1200
-1040-   C9 01       CMP   #$01
-1042-   F0 01       BEQ   $1045
-1044-   00          BRK   
-1045-   20 00 12    JSR   $1200
-1048-   C9 02       CMP   #$02
-104A-   F0 01       BEQ   $104D
-104C-   00          BRK   
-104D-   20 00 12    JSR   $1200
-1050-   C9 FD       CMP   #$FD
-1052-   F0 01       BEQ   $1055
-1054-   00          BRK   
-1055-   A2 00       LDX   #$00
-1057-   20 00 12    JSR   $1200
-105A-   9D 80 09    STA   $0980,X
-105D-   E8          INX   
-105E-   10 F7       BPL   $1057
-1060-   20 00 12    JSR   $1200
-1063-   A9 06       LDA   #$06
-1065-   20 00 11    JSR   $1100
-1068-   20 00 12    JSR   $1200
-106B-   C9 04       CMP   #$04
-106D-   F0 01       BEQ   $1070
-106F-   00          BRK   
-1070-   A9 06       LDA   #$06
-1072-   20 00 11    JSR   $1100
-1075-   60          RTS   
-1076-   B6 F0       LDX   $F0,Y
-1078-   08          PHP   
-1079-   EE BD B5    INC   $B5BD
-107C-   D0 03       BNE   $1081
+soh     := $01      # ASCII 'SOH' character
+eot     := $04      # ASCII 'EOT' character
+ack     := $06      # ASCII 'ACK' character
+nak     := $15      # ASCII 'NAK' character
+can     := $18      # ASCII 'CAN' character
+
+warmstart   := $03D0    # DOS warmstart return to BASIC
+coldstart   := $03D3    # DOS coldstart clear program and return to BASIC
+
+buffer  := $0900    # 256 byte input buffer, part 1
+buffer2  := $0980    # 256 byte input buffer, part 2
+
+tdreg   := $C0A8    # transmit register for slot 2
+rdreg   := $C0A8    # receive register for slot 2
+streg   := $C0A9    # status register for slot 2
+cmdreg  := $C0AA    # command register for slot 2
+ctlreg  := $C0AB    # control register for slot 2
 
 
-1100-   48          PHA   
-1101-   AD A9 C0    LDA   $C0A9
-1104-   29 70       AND   #$70
-1106-   C9 10       CMP   #$10
-1108-   D0 F7       BNE   $1101
-110A-   68          PLA   
-110B-   A0 A9       LDY   #$A9
-110D-   99 FF BF    STA   $BFFF,Y
-1110-   60          RTS   
-1111-   FF          ???   
-1112-   FF          ???   
-1113-   00          BRK   
-1114-   00          BRK   
-1115-   FF          ???   
-1116-   FF          ???   
-1117-   00          BRK   
-1118-   00          BRK   
-1119-   FF          ???   
-111A-   FF          ???   
-111B-   00          BRK   
+    LDA   #$0B
+    STA   cmdreg
+    LDA   #$1F
+    STA   $CMDREG
+    LDA   #nak
+    JSR   sendbyte
+    JSR   recvbyte
+    CMP   #soh
+    BEQ   sohreceived1
+    BRK
+sohreceived1:
+    JSR   recvbyte
+    CMP   #$01
+    BEQ   block1idreceived
+    BRK
+block1idreceived:
+    JSR   recvbyte
+    CMP   #$FE
+    BEQ   block1idchecksumreceived
+    BRK
+block1idchecksumreceived:
+    LDX   #$00
+readdatabyte:
+    JSR   recvbyte
+    STA   buffer,X
+    INX
+    BPL   readdatabyte
+    JSR   recvbyte  # receive (and ignore!) checksum
+    LDA   #ack
+    JSR   sendbyte
+    JSR   readbyte
+    CMP   #soh
+    BEQ   sohreceived2
+    BRK
+sohreceived2:
+    JSR   readbyte
+    CMP   #$02
+    BEQ   block2idreceived
+    BRK
+block2idreceived:
+    JSR   readbyte
+    CMP   #$FD
+    BEQ   block2idchecksumreceived
+    BRK
+block2idchecksumreceived:
+    LDX   #$00
+readdatabyte2:
+    JSR   readbyte
+    STA   buffer2,X
+    INX
+    BPL   readdatabyte2
+    JSR   readbyte  # receive (and ignore!) checksum
+    LDA   #ack
+    JSR   sendbyte
+    JSR   readbyte
+    CMP   #eot
+    BEQ   eotreceived
+    BRK
+eotreceived:
+    LDA   #ack
+    JSR   sendbyte
+    JMP   coldstart
 
 
-1200-   AD A9 C0    LDA   $C0A9
-1203-   EA          NOP   
-1204-   EA          NOP   
-1205-   EA          NOP   
-1206-   EA          NOP   
-1207-   EA          NOP   
-1208-   EA          NOP   
-1209-   EA          NOP   
-120A-   EA          NOP   
-120B-   29 08       AND   #$08
-120D-   F0 F1       BEQ   $1200
-120F-   AD A8 C0    LDA   $C0A8
-1212-   60          RTS   
-1213-   FF          ???   
-1214-   FF          ???   
-1215-   00          BRK   
-1216-   00          BRK   
-1217-   FF          ???   
-1218-   FF          ???   
-1219-   00          BRK   
+sendbyte:
+    PHA
+waitforreadytosend:
+    LDA   streg
+    AND   #$70
+    CMP   #$10
+    BNE   waitforreadytosend
+    PLA
+    LDY   #$A9
+    STA   $BFFF,Y   # magic to ensure no read before write
+    RTS
+
+recvbyte:
+    LDA   streg
+    AND   #$08
+    BEQ   recvbyte
+    LDA   rdreg
+    RTS
